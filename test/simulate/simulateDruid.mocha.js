@@ -1,6 +1,6 @@
 /*
  * Copyright 2012-2015 Metamarkets Group Inc.
- * Copyright 2015-2019 Imply Data, Inc.
+ * Copyright 2015-2020 Imply Data, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -2235,6 +2235,20 @@ describe("simulate Druid", () => {
         "queryType": "timeseries"
       }
     ]);
+  });
+
+  it("makes a query for timesplit with having filter", () => {
+    let ex = ply()
+      .apply(
+        'BySegment',
+        $('diamonds').split($("time").timeBucket('PT1H', 'Etc/UTC'), 'TimeSegment')
+          .apply('Total', $('diamonds').sum('$price'))
+          .filter('$Total > 1000')
+      );
+
+    let queryPlan = ex.simulateQueryPlan(context);
+    expect(queryPlan.length).to.equal(1);
+    expect(queryPlan[0][0].queryType).to.deep.equal('groupBy');
   });
 
   it("makes a filtered aggregate query 2", () => {
